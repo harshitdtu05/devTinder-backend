@@ -3,7 +3,6 @@ const authRouter = express.Router();
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const { validateSignUpData } = require("../utils/validate");
-const jwt = require("jsonwebtoken");
 
 authRouter.post("/signup", async (req, res) => {
   try {
@@ -61,6 +60,15 @@ authRouter.post("/login", async (req, res) => {
     } else throw new Error("Invalid password");
   } catch (err) {
     res.status(400).send("Error creating user:" + err.message);
+  }
+});
+
+authRouter.post("/logout", async (req, res) => {
+  try {
+    res.cookie("token", null, { expires: new Date(Date.now()) });
+    res.send("Logout successful");
+  } catch (err) {
+    res.status(400).send("Error logging out:" + err.message);
   }
 });
 

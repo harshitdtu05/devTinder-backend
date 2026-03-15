@@ -18,6 +18,17 @@ const validateSignUpData = (req) => {
   }
 };
 
+const validateProfileUpdateData = (req) => {
+  const ALLOWED_FIELDS = ["gender", "about", "skills", "photoUrl", "age"];
+
+  const isUpdateValid = Object.keys(req.body).every((field) =>
+    ALLOWED_FIELDS.includes(field)
+  );
+
+  return isUpdateValid;
+};
+
 module.exports = {
   validateSignUpData,
+  validateProfileUpdateData,
 };

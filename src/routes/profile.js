@@ -1,8 +1,10 @@
 const express = require("express");
 const profileRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
+const { validateProfileUpdateData } = require("../utils/validate");
+const User = require("../models/user");
 
-profileRouter.get("/profile", userAuth, async (req, res) => {
+profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     const user = req.user;
 
@@ -13,36 +15,27 @@ profileRouter.get("/profile", userAuth, async (req, res) => {
 });
 
 // Update a user
-profileRouter.patch("/profile/edit/:userId", userAuth, async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-
+profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
   try {
-    // Validation check for API request body to allow only certain fields to be updated
-    const ALLOWED_FIELDS = ["about", "skills", "photoUrl"];
-
-    const isUpdateValid = Object.keys(data).every((field) =>
-      ALLOWED_FIELDS.includes(field)
-    );
-
-    if (!isUpdateValid) {
-      throw new error("Invalid update fields");
+    if (!validateProfileUpdateData(req)) {
+      throw new Error("Invalid update fields");
     }
 
-    if (data?.skills.length > 5) {
-      throw new error("You can add up to 5 skills only");
-    }
+    const loggedInUser = req.user;
+    console.log(loggedInUser);
 
-    console.log(data);
+    Object.keys(req.body).forEach((key) => (loggedInUser[key] = req.body[key]));
 
-    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
-      returnDocument: "before",
-      runValidators: true,
+    console.log(loggedInUser);
+
+    await loggedInUser.save();
+
+    res.json({
+      message: `${loggedInUser.firstName}'s profile updated successfully`,
+      data: loggedInUser,
     });
-
-    res.send("User updated successfully");
   } catch (err) {
-    res.status(400).send("Error finding user" + err.message);
+    res.status(400).send("Error updating user profile:" + err.message);
   }
 });
 
