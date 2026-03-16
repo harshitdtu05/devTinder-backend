@@ -65,4 +65,50 @@ connectionRequestRouter.post(
   }
 );
 
+connectionRequestRouter.post(
+  "/request/review/:status/:requestUserId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { requestUserId, status } = req.params;
+
+      console.log(loggedInUser); //mark 81
+      console.log(requestUserId); // sundar 83
+
+      const ALLOWED_STATUS = ["accepted", "rejected"];
+      // check if the status is valid or not
+      if (!ALLOWED_STATUS.includes(status)) {
+        return res.status(400).json({ message: "Invalid status" + status });
+      }
+
+      //   Check if the connection request exists in database
+      const connectionRequest = await ConnectionRequestModel.findOne(
+        { fromUserId: requestUserId },
+        { toUserId: loggedInUser._id },
+        { status: "interested" }
+      );
+
+      //   validate the connection request
+      if (!connectionRequest) {
+        return res
+          .status(404)
+          .json({ message: "Connection request not found" });
+      }
+
+      //   save the review of connection request in database
+      connectionRequest.status = status;
+      const data = await connectionRequest.save();
+      res.json({
+        message: "Connection request " + status,
+        data,
+      });
+    } catch (err) {
+      res
+        .status(400)
+        .send("Error reviewing connection request: " + err.message);
+    }
+  }
+);
+
 module.exports = connectionRequestRouter;

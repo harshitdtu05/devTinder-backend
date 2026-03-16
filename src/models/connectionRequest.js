@@ -5,10 +5,12 @@ const connectionRequestSchema = new mongoose.Schema(
     fromUserId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
+      ref: "User",
     },
     toUserId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
+      ref: "User",
     },
     status: {
       type: String,
@@ -26,7 +28,11 @@ connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
 
 connectionRequestSchema.pre("save", async function () {
   const connectionRequest = this;
-  if (this.fromUserId.equals(this.toUserId)) {
+  if (
+    this.fromUserId &&
+    this.toUserId &&
+    this.fromUserId.equals(this.toUserId)
+  ) {
     throw new Error("Cannot send connection request to yourself");
   }
 });
